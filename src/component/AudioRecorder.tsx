@@ -173,7 +173,7 @@ const AudioRecorder = () => {
         onClick={handleGenerate}
         disabled={!audio || isLoading}
       >
-        {isLoading ? "Generating..." : "Generate"}
+        {isLoading ? "Transcribing..." : "Transcribe"}
       </button>
 
       <div>
