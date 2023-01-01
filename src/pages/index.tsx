@@ -23,6 +23,22 @@ const Home: NextPage = () => {
               height="100"
             />
           </p>
+          <div className="m-3 ml-auto">
+            <a
+              href="https://github.com/mharrvic/redhorse-ai-transcriber"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <Image
+                src="/github.svg"
+                alt="Banana Logo"
+                width="20"
+                height="20"
+              />
+              <p className="text-white"> Source Code</p>
+            </a>
+          </div>
         </nav>
         <div className="mx-4 px-4 py-16 text-center">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
