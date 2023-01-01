@@ -5,6 +5,7 @@ import MicRecorder from "mic-recorder-to-mp3";
 
 import React from "react";
 import { trpc } from "../utils/trpc";
+import Divider from "./Divider";
 
 const buttonStyle =
   "inline-flex items-center rounded-md border border-transparent px-6 py-3 text-base font-medium text-white shadow-sm";
@@ -121,12 +122,11 @@ const AudioRecorder = () => {
     const audio = audioRef.current;
     if (audio) {
       audio.currentTime = start;
-
       audio.play();
     }
   };
 
-  const handleOnTranscriptClick = (start: number) => {
+  const handleOnTranscriptClick = (start: number, end: number) => {
     seekTo(start);
   };
 
@@ -159,9 +159,15 @@ const AudioRecorder = () => {
 
       {blobURL && (
         <div className="text-center">
-          <p className="font-mono text-xl">Audio Preview</p>
+          <p className="font-mono text-sm text-gray-200">Audio Preview</p>
           <audio src={blobURL} controls={true} ref={audioRef} />
         </div>
+      )}
+
+      {audio && (
+        <p className="font-mono text-sm text-gray-200">
+          Click this to transcribe!
+        </p>
       )}
 
       <button
@@ -176,23 +182,29 @@ const AudioRecorder = () => {
         {isLoading ? "Transcribing..." : "Transcribe"}
       </button>
 
-      <div>
-        {transcript.length > 0 && (
-          <p className="font-mono text-sm text-gray-300">
-            Click each of the transcribed text to play
-          </p>
-        )}
-        {transcript.map((item, index) => (
-          <div
-            key={index}
-            className="mb-8 cursor-pointer hover:underline"
-            onMouseOver={() => handleMouseOver(item.start, item.end, item.text)}
-            onClick={() => handleOnTranscriptClick(item.start)}
-          >
-            <p>{item.text}</p>
+      {transcript.length > 0 && (
+        <>
+          <Divider />
+          <div>
+            <p className="font-mono text-sm text-gray-300">
+              Click each of the transcribed text to play
+            </p>
+            {transcript.map((item, index) => (
+              <div
+                key={index}
+                className="mb-8 cursor-pointer hover:underline"
+                onMouseOver={() =>
+                  handleMouseOver(item.start, item.end, item.text)
+                }
+                onClick={() => handleOnTranscriptClick(item.start, item.end)}
+              >
+                <p>{item.text}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          <Divider />
+        </>
+      )}
     </div>
   );
 };
