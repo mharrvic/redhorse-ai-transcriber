@@ -34,7 +34,7 @@ const AudioRecorder = () => {
       .then(() => {
         setIsRecording(true);
       })
-      .catch((e) => console.error(e));
+      .catch((e: string) => console.error(e));
   };
 
   const handleStopRecording = () => {
@@ -42,7 +42,8 @@ const AudioRecorder = () => {
     recorder
       .stop()
       .getMp3()
-      .then(([buffer, blob]) => {
+      .then((audioData: [Int8Array[], Blob]) => {
+        const [buffer, blob] = audioData;
         const file = new File(buffer, "test.mp3", {
           type: blob.type,
           lastModified: Date.now(),
