@@ -14,6 +14,7 @@ function roundOff(num: number) {
 }
 
 const AudioRecorder = () => {
+  const audioRef = React.useRef<HTMLAudioElement>(null);
   const [audio, setAudio] = React.useState<string>();
   const [blobURL, setBlobURL] = React.useState("");
   const [isRecording, setIsRecording] = React.useState(false);
@@ -116,6 +117,19 @@ const AudioRecorder = () => {
     ));
   };
 
+  const seekTo = (start: number) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = start;
+
+      audio.play();
+    }
+  };
+
+  const handleOnTranscriptClick = (start: number) => {
+    seekTo(start);
+  };
+
   return (
     <div className="mt-5 flex flex-col place-items-center gap-5">
       <div className="flex gap-5">
@@ -146,7 +160,7 @@ const AudioRecorder = () => {
       {blobURL && (
         <div className="text-center">
           <p className="font-mono text-xl">Audio Preview</p>
-          <audio src={blobURL} controls={true} />
+          <audio src={blobURL} controls={true} ref={audioRef} />
         </div>
       )}
 
@@ -163,14 +177,20 @@ const AudioRecorder = () => {
       </button>
 
       <div>
-        {transcript.map((item, index) => (
-          <p
-            key={index}
-            className="mb-8 hover:underline"
-            onMouseOver={() => handleMouseOver(item.start, item.end, item.text)}
-          >
-            {item.text}
+        {transcript.length > 0 && (
+          <p className="font-mono text-sm text-gray-300">
+            Click each of the transcribed text to play
           </p>
+        )}
+        {transcript.map((item, index) => (
+          <div
+            key={index}
+            className="mb-8 cursor-pointer hover:underline"
+            onMouseOver={() => handleMouseOver(item.start, item.end, item.text)}
+            onClick={() => handleOnTranscriptClick(item.start)}
+          >
+            <p>{item.text}</p>
+          </div>
         ))}
       </div>
     </div>
