@@ -126,7 +126,7 @@ const AudioRecorder = () => {
     }
   };
 
-  const handleOnTranscriptClick = (start: number, end: number) => {
+  const handleOnTranscriptClick = (start: number) => {
     seekTo(start);
   };
 
@@ -196,7 +196,7 @@ const AudioRecorder = () => {
                 onMouseOver={() =>
                   handleMouseOver(item.start, item.end, item.text)
                 }
-                onClick={() => handleOnTranscriptClick(item.start, item.end)}
+                onClick={() => handleOnTranscriptClick(item.start)}
               >
                 <p>{item.text}</p>
               </div>
