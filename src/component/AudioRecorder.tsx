@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import toast from "react-hot-toast";
 
 import MicRecorder from "mic-recorder-to-mp3";
 
@@ -8,11 +9,21 @@ import { trpc } from "../utils/trpc";
 const buttonStyle =
   "inline-flex items-center rounded-md border border-transparent px-6 py-3 text-base font-medium text-white shadow-sm";
 
+function roundOff(num: number) {
+  return Math.round(num).toFixed(2);
+}
+
 const AudioRecorder = () => {
   const [audio, setAudio] = React.useState<string>();
   const [blobURL, setBlobURL] = React.useState("");
   const [isRecording, setIsRecording] = React.useState(false);
-  const [transcript, setTranscript] = React.useState<string[]>([]);
+  const [transcript, setTranscript] = React.useState<
+    {
+      start: number;
+      end: number;
+      text: string;
+    }[]
+  >([]);
 
   const recorder = React.useMemo(() => new MicRecorder({ bitRate: 128 }), []);
 
@@ -20,10 +31,15 @@ const AudioRecorder = () => {
 
   const { mutate, isLoading } = trpc.ml.transcribe.useMutation({
     onSuccess: (data) => {
+      toast.remove();
+      toast.success("Transcribed!");
       data.modelOutputs[0]?.text.map((output) => {
-        const text = output.text;
-        setTranscript((prev) => [...prev, text]);
+        const { text, start, end } = output;
+        setTranscript((prev) => [...prev, { start, end, text }]);
       });
+    },
+    onError: () => {
+      toast.error("Error!");
     },
   });
 
@@ -63,14 +79,46 @@ const AudioRecorder = () => {
   };
 
   const handleGenerate = () => {
+    toast.loading("Transcribing with openai's whisper...");
     setIsRecording(false);
     if (audio) {
       mutate({ mp3BytesString: audio });
     }
   };
+
+  const handleMouseOver = (start: number, end: number, text: string) => {
+    toast.remove();
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? "animate-enter" : "animate-leave"
+        } pointer-events-auto flex w-full max-w-md rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+      >
+        <div className="w-0 flex-1 p-4">
+          <div className="flex items-start">
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-gray-900">{`From: ${roundOff(
+                start
+              )}s - To: ${roundOff(end)}s`}</p>
+              <p className="mt-1 text-sm text-gray-500">{text}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex border-l border-gray-200">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    ));
+  };
+
   return (
-    <div>
-      <div className="mb-2 flex gap-5">
+    <div className="mt-5 flex flex-col place-items-center gap-5">
+      <div className="flex gap-5">
         <button
           onClick={handleStartRecording}
           disabled={isRecording}
@@ -95,27 +143,34 @@ const AudioRecorder = () => {
         </button>
       </div>
 
-      <div>
-        <audio src={blobURL} controls={true} />
-      </div>
+      {blobURL && (
+        <div className="text-center">
+          <p className="font-mono text-xl">Audio Preview</p>
+          <audio src={blobURL} controls={true} />
+        </div>
+      )}
+
+      <button
+        type="submit"
+        className={clsx(buttonStyle, {
+          "bg-gray-600": !audio,
+          "bg-[#ff6b00]": audio,
+        })}
+        onClick={handleGenerate}
+        disabled={!audio || isLoading}
+      >
+        {isLoading ? "Generating..." : "Generate"}
+      </button>
 
       <div>
-        <button
-          type="submit"
-          className={clsx(buttonStyle, {
-            "bg-gray-600": !audio,
-            "bg-green-600": audio,
-          })}
-          onClick={handleGenerate}
-          disabled={!audio}
-        >
-          {isLoading ? "Generating..." : "Generate"}
-        </button>
-      </div>
-
-      <div>
-        {transcript.map((text, index) => (
-          <p key={index}>{text}</p>
+        {transcript.map((item, index) => (
+          <p
+            key={index}
+            className="mb-8 hover:underline"
+            onMouseOver={() => handleMouseOver(item.start, item.end, item.text)}
+          >
+            {item.text}
+          </p>
         ))}
       </div>
     </div>
